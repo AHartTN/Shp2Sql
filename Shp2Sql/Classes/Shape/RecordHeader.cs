@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="RecordHeader.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,42 +18,34 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.IO;
+using Shp2Sql.Classes.Helpers;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.Data.Entity;
-    using System.IO;
-    using Shp2Sql.Classes.Helpers;
-    #endregion
+	#region Using Directives
 
-    public class RecordHeader
-    {
-        public RecordHeader()
-        {
-        }
+	
 
-        public RecordHeader(BinaryReader br)
-        {
-            RecordNumber = NumericsHelper.ReverseInt(br.ReadInt32()); // Big, Reverse for actual value
-            ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()); // Big, Reverse for actual value
-        }
+	#endregion
 
-        public long Id { get; set; }
-        public int RecordNumber { get; set; }
-        public int ContentLength { get; set; }
+	public class RecordHeader
+	{
+		public RecordHeader()
+		{
+		}
 
-        public static RecordHeader Import(BinaryReader br)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                RecordHeader rh = new RecordHeader(br);
-                db.Entry(db.RecordHeaders.Add(rh)).State = EntityState.Added;
-                return db.SaveChanges() > 0
-                           ? rh
-                           : null;
-            }
-        }
-    }
+		public RecordHeader(BinaryReader br)
+		{
+			RecordNumber = NumericsHelper.ReverseInt(br.ReadInt32()); // Big, Reverse for actual value
+			ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()); // Big, Reverse for actual value
+		}
+
+		public long Id { get; set; }
+		public int RecordNumber { get; set; }
+		public int ContentLength { get; set; }
+	}
 }

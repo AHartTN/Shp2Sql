@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="Polyline.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,83 +18,83 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using Shp2Sql.Enumerators;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data.Entity;
-    using System.IO;
-    using Shp2Sql.Enumerators;
-    #endregion
+	#region Using Directives
 
-    public class Polyline : BaseShape
-    {
-        public Polyline()
-        {
-            Parts = new List<Part>();
-        }
 
-        public Polyline(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
-        {
-            if (!readHeader)
-                ShapeType = ShapeTypeEnum.Polyline;
-            if (shp.ShapeType != ShapeType)
-                throw new Exception(string.Format("Unable to process shape! Shape types do not match! (Shapefile: {0} | Record: {1}", shp.ShapeType, ShapeType));
-            BoundingBox = new BoundingBox(br);
-            BoundingBoxId = BoundingBox.Id;
-            NumberOfParts = br.ReadInt32();
-            NumberOfPoints = br.ReadInt32();
-            Parts = new List<Part>(NumberOfParts);
-            for (int i = 0; i < NumberOfParts; i++)
-            {
-                Parts.Add(new Part(br));
-                if (i > 0)
-                    Parts[i - 1].EndIndex = Parts[i].StartIndex - 1;
-                if (i + 1 == NumberOfParts)
-                    Parts[i].EndIndex = NumberOfPoints - 1;
-            }
-            for (int i = 0; i < NumberOfParts; i++)
-            {
-                Parts[i].NumberOfPoints = (Parts[i].EndIndex - Parts[i].StartIndex) + 1;
-                Parts[i].Points = new List<Point>(Parts[i].NumberOfPoints);
-            }
-            for (int i = 0; i < NumberOfParts; i++)
-            {
-                for (int j = 0; j < Parts[i].NumberOfPoints; j++)
-                    Parts[i].Points.Add(new Point(shp, br, false));
-            }
-        }
 
-        public long BoundingBoxId { get; set; }
+	#endregion
 
-        [ForeignKey("BoundingBoxId")]
-        public BoundingBox BoundingBox { get; set; }
+	public class Polyline : BaseShape
+	{
+		public Polyline()
+		{
+			Parts = new HashSet<Part>();
+		}
 
-        public int NumberOfParts { get; set; }
-        public int NumberOfPoints { get; set; }
-        public List<Part> Parts { get; set; }
-        public long? ZRangeId { get; set; }
+		public Polyline(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
+		{
+			if (!readHeader)
+				ShapeType = ShapeTypeEnum.Polyline;
 
-        [ForeignKey("ZRangeId")]
-        public ZRange ZRange { get; set; }
+			if (shp.ShapeType != ShapeType)
+				throw new Exception(
+					$"Unable to process shape! Shape types do not match! (Shapefile: {shp.ShapeType} | Record: {ShapeType}");
 
-        public long? MeasurementRangeId { get; set; }
+			BoundingBox = new BoundingBox(br);
+			//BoundingBoxId = BoundingBox.Id;
 
-        [ForeignKey("MeasurementRangeId")]
-        public MeasurementRange MeasurementRange { get; set; }
+			NumberOfParts = br.ReadInt32();
+			NumberOfPoints = br.ReadInt32();
 
-        public static bool Import(ShapeFile shp, BinaryReader br, bool readHeader = true)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                Polyline newObj = new Polyline(shp, br, readHeader);
-                db.Entry(db.Polylines.Add(newObj)).State = EntityState.Added;
-                return db.SaveChanges() > 0;
-            }
-        }
-    }
+			var parts = (List<Part>) Parts; 
+
+			for (var i = 0; i < NumberOfParts; i++)
+			{
+				((List<Part>)Parts)[i] = new Part(br);
+				if (i > 0)
+					parts[i - 1].EndIndex = ((List<Part>)Parts)[i].StartIndex - 1;
+				if (i + 1 == NumberOfParts)
+					((List<Part>)Parts)[i].EndIndex = NumberOfPoints - 1;
+			}
+			for (var i = 0; i < NumberOfParts; i++)
+			{
+				((List<Part>)Parts)[i].NumberOfPoints = ((List<Part>)Parts)[i].EndIndex - ((List<Part>)Parts)[i].StartIndex + 1;
+				((List<Part>)Parts)[i].Points = new Point[((List<Part>)Parts)[i].NumberOfPoints];
+			}
+			for (var i = 0; i < NumberOfParts; i++)
+			{
+				for (var j = 0; j < ((List<Part>)Parts)[i].NumberOfPoints; j++)
+					((List<Part>)Parts)[i].Points.Add(new Point(shp, br, false));
+			}
+		}
+
+		public long BoundingBoxId { get; set; }
+
+		[ForeignKey("BoundingBoxId")]
+		public BoundingBox BoundingBox { get; set; }
+
+		public int NumberOfParts { get; set; }
+		public int NumberOfPoints { get; set; }
+		public ICollection<Part> Parts { get; set; }
+		public long? ZRangeId { get; set; }
+
+		[ForeignKey("ZRangeId")]
+		public ZRange ZRange { get; set; }
+
+		public long? MeasurementRangeId { get; set; }
+
+		[ForeignKey("MeasurementRangeId")]
+		public MeasurementRange MeasurementRange { get; set; }
+	}
 }

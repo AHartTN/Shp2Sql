@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="MeasurementRange.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,44 +18,36 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.ComponentModel.DataAnnotations;
+using System.IO;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.ComponentModel.DataAnnotations;
-    using System.Data.Entity;
-    using System.IO;
-    #endregion
+	#region Using Directives
 
-    public class MeasurementRange
-    {
-        public MeasurementRange()
-        {
-        }
+	
 
-        public MeasurementRange(BinaryReader br)
-        {
-            Minimum = br.ReadDouble();
-            Maximum = br.ReadDouble();
-        }
+	#endregion
 
-        [Key]
-        public long Id { get; set; }
+	public class MeasurementRange
+	{
+		public MeasurementRange()
+		{
+		}
 
-        public double Minimum { get; set; }
-        public double Maximum { get; set; }
+		public MeasurementRange(BinaryReader br)
+		{
+			Minimum = br.ReadDouble();
+			Maximum = br.ReadDouble();
+		}
 
-        public static MeasurementRange Import(BinaryReader br)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                MeasurementRange mr = new MeasurementRange(br);
-                db.Entry(db.MeasurementRanges.Add(mr)).State = EntityState.Added;
-                return db.SaveChanges() > 0
-                           ? mr
-                           : null;
-            }
-        }
-    }
+		[Key]
+		public long Id { get; set; }
+
+		public double Minimum { get; set; }
+		public double Maximum { get; set; }
+	}
 }

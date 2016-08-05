@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="BoundingBox.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,53 +18,44 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.ComponentModel.DataAnnotations;
+using System.IO;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.ComponentModel.DataAnnotations;
-    using System.Data.Entity;
-    using System.IO;
-    #endregion
+	#region Using Directives
 
-    public class BoundingBox
-    {
-        public BoundingBox()
-        {
-        }
 
-        public BoundingBox(BinaryReader br)
-        {
-            XMin = br.ReadDouble();
-            YMin = br.ReadDouble();
-            XMax = br.ReadDouble();
-            YMax = br.ReadDouble();
-        }
 
-        [Key]
-        public long Id { get; set; }
+	#endregion
 
-        public double XMin { get; set; }
-        public double YMin { get; set; }
-        public double XMax { get; set; }
-        public double YMax { get; set; }
-        public double? ZMin { get; set; }
-        public double? ZMax { get; set; }
-        public double? MMin { get; set; }
-        public double? MMax { get; set; }
+	public class BoundingBox
+	{
+		public BoundingBox()
+		{
+		}
 
-        public static BoundingBox Import(BinaryReader br)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                BoundingBox newObj = new BoundingBox(br);
-                newObj = db.BoundingBoxes.Add(newObj);
-                db.Entry(newObj).State = EntityState.Added;
-                return db.SaveChanges() > 0
-                           ? newObj
-                           : null;
-            }
-        }
-    }
+		public BoundingBox(BinaryReader br)
+		{
+			XMin = br.ReadDouble();
+			YMin = br.ReadDouble();
+			XMax = br.ReadDouble();
+			YMax = br.ReadDouble();
+		}
+
+		[Key]
+		public long Id { get; set; }
+
+		public double XMin { get; set; }
+		public double YMin { get; set; }
+		public double XMax { get; set; }
+		public double YMax { get; set; }
+		public double? ZMin { get; set; }
+		public double? ZMax { get; set; }
+		public double? MMin { get; set; }
+		public double? MMax { get; set; }
+	}
 }

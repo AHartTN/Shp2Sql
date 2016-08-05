@@ -1,364 +1,217 @@
-﻿namespace Shp2Sql
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.IO;
+using System.Linq;
+using Shp2Sql.Classes.Helpers;
+using Shp2Sql.Enumerators;
+using Shp2Sql.Models.Binding;
+
+namespace Shp2Sql
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Data.Entity;
-    using System.IO;
-    using System.Linq;
-    using Microsoft.SqlServer.Types;
-    using Shp2Sql.Classes.Helpers;
-    using Shp2Sql.Enumerators;
-    using Shp2Sql.Models.Binding;
-    using Shp2Sql.Models.Entity;
+	public class ESRIHelper
+	{
+		static ESRIHelper()
+		{
+			IndexFiles = new HashSet<IndexFile>();
+			ShapeFiles = new HashSet<ShapeFile>();
+			AttributeFiles = new HashSet<AttributeFile>();
+			FGDCMetadataFiles = new HashSet<FGDCMetadataFile>();
+			ISOMetadataFiles = new HashSet<ISOMetadataFile>();
+			ISOEAMetadataFiles = new HashSet<ISOEAMetadataFile>();
+			ProjectionFiles = new HashSet<ProjectionFile>();
+		}
 
-    public class ESRIHelper
-    {
-        #region Extensions
-        public const string ShapeFormatExtension = ".shp";
-        public const string ShapeIndexFormatExtension = ".shx";
-        public const string AttributeFormatExtension = ".dbf";
-        public const string ProjectionFormatExtension = ".prj";
+		public static Dictionary<ImportFileType, string> FileTypes = new Dictionary<ImportFileType, string>
+			{
+				{ImportFileType.Shape, ShapeFormatExtension},
+				{ImportFileType.Attribute, AttributeFormatExtension},
+				{ImportFileType.Index, ShapeIndexFormatExtension},
+				{ImportFileType.FGDCMetadata, FGDCMetadataExtension},
+				{ImportFileType.ISOMetadata, ISO191Extension},
+				{ImportFileType.ISOEAMetadata, ISO191EAExtension},
+				{ImportFileType.Projection, ProjectionFormatExtension},
+			};
 
-        public const string GeocodingIndexExtension = ".ixs";
-        public const string ODBGeocodingIndexExtension = ".mxs";
-        public const string DBFAttributeIndexExtension = ".atx";
-        public const string GeospatialMetadataExtension = ".shp.xml";
-        public const string CodePageExtension = ".cpg";
+		public static ICollection<IndexFile> IndexFiles { get; set; }
+		public static ICollection<ShapeFile> ShapeFiles { get; set; }
+		public static ICollection<AttributeFile> AttributeFiles { get; set; }
+		public static ICollection<FGDCMetadataFile> FGDCMetadataFiles { get; set; }
+		public static ICollection<ISOMetadataFile> ISOMetadataFiles { get; set; }
+		public static ICollection<ISOEAMetadataFile> ISOEAMetadataFiles { get; set; }
+		public static ICollection<ProjectionFile> ProjectionFiles { get; set; }
 
-        public static readonly string[] SpatialIndexExtension = {
-                                                                    ".sbn",
-                                                                    ".sbx"
-                                                                };
+		public static void ProcessDirectory(string directoryPath, Dictionary<ImportFileType, string> fileTypes = null)
+		{
+			var directoryInfo = new DirectoryInfo(directoryPath);
 
-        public static readonly string[] SpatialIndexReadOnlyExtension = {
-                                                                            ".fbn",
-                                                                            ".fbx"
-                                                                        };
+			if (!directoryInfo.Exists)
+				throw new Exception("The specified directory does not exist!");
 
-        public static readonly string[] AttributeIndexExtension = {
-                                                                      ".ain",
-                                                                      ".aih"
-                                                                  };
-        #endregion Extensions
+			ProcessXMLSchemas(directoryInfo);
 
-        private static List<string> files;
+			fileTypes = fileTypes ?? FileTypes;
 
-        public static string GetProgressString(int charIndex, long fileLength, string name)
-        {
-            decimal percentage = 100 * (charIndex / fileLength);
-            return String.Format("{0} of {1} ({2}%): {3}                \r", charIndex, fileLength, percentage, name);
-        }
+			Console.WriteLine($"{DateTime.Now}\tProcessing all files in {directoryInfo.FullName} with the following Import types:\r\n{string.Join(" | ", fileTypes.Keys)}\r\n({string.Join(" | ", fileTypes.Values)})");
 
-        public static void ProcessDirectory(string directoryPath)
-        {
-            DirectoryInfo directoryInfo = new DirectoryInfo(directoryPath);
+			foreach (var fileType in fileTypes)
+			{
+				var files = directoryInfo.EnumerateFiles($"*.{fileType.Value.Trim().Trim('.')}", SearchOption.AllDirectories)
+										 .OrderByDescending(o => o.Length)
+										 .Select((f, i) => new { File = f, Index = i })
+										 .ToArray();
 
-            if (!directoryInfo.Exists)
-                throw new Exception("The specified directory does not exist!");
+				if (files.Any())
+				{
+					var fileCount = files.Length;
+					var resultSize = files.Sum(s => s.File.Length);
+					var averageFileSize = files.Average(a => a.File.Length);
+					var medianFileSize = files.Median(m => m.File.Length);
+					long totalProgress = 0;
+					var totalProgressPercentage = 0.0m;
 
-            // Index Files
-            //files = directoryInfo.GetFiles(String.Format("*{0}", ShapeIndexFormatExtension), SearchOption.AllDirectories).Select(s => s.FullName).ToList();
-            //Console.WriteLine("Parsing {0} index files!", files.Count);
-            //foreach (string file in files)
-            //    ImportIndexFile(file);
+					Console.WriteLine($"{DateTime.Now}\tProcessing {fileCount} {fileType} file{(files.Length == 1 ? "" : "s")}");
 
-            // Shape Files
-            files = directoryInfo.GetFiles(string.Format("*{0}", ShapeFormatExtension), SearchOption.AllDirectories).Select(s => s.FullName).ToList();
-            Console.WriteLine("Parsing {0} shape files!", files.Count);
-            foreach (string file in files)
-                ImportShapeFile(file);
+					foreach (var result in files)
+					{
+						var fileSizePercentage = 100 * (result.File.Length / resultSize);
+						var averageFileSizeDifference = 100 * (result.File.Length / averageFileSize);
+						var medianFileSizeDifference = 100 * (result.File.Length / medianFileSize);
 
-            //List<FileInfo> projectionFiles = directoryInfo.GetFiles(string.Format("*{0}", ProjectionFormatExtension), SearchOption.AllDirectories).ToList();
-            //List<FileInfo> metadataFiles = directoryInfo.GetFiles(string.Format("*{0}", GeospatialMetadataExtension), SearchOption.AllDirectories).ToList();
-            //List<FileInfo> attributeFiles = directoryInfo.GetFiles(string.Format("*{0}", AttributeFormatExtension), SearchOption.AllDirectories).ToList();
-        }
+						Console.Write($"\r{DateTime.Now} | {totalProgress} of {resultSize} ({totalProgressPercentage}%) | {result.File.Length} ({fileSizePercentage}%)\t{result.File.Name}");
 
-        public static void ImportIndexFile(string filePath)
-        {
-            Console.WriteLine("Parsing {0}", filePath);
-            FileInfo fileInfo = new FileInfo(filePath);
+						ProcessFile(result.File, fileType.Key, fileType.Value);
 
-            if (!fileInfo.Exists ||
-                fileInfo.Extension != ShapeIndexFormatExtension)
-                throw new ArgumentException("The file you specified either does not exist or is not the appropriate shapefile extenision (*.shx).");
+						totalProgress += result.File.Length;
+						totalProgressPercentage += fileSizePercentage;
 
-            IndexFile result = new IndexFile
-                               {
-                                   CreationTime = fileInfo.CreationTime,
-                                   CreationTimeUtc = fileInfo.CreationTimeUtc,
-                                   DirectoryName = fileInfo.DirectoryName,
-                                   Extension = fileInfo.Extension,
-                                   FullName = fileInfo.FullName,
-                                   IsReadOnly = fileInfo.IsReadOnly,
-                                   LastAccessTime = fileInfo.LastAccessTime,
-                                   LastAccessTimeUtc = fileInfo.LastAccessTimeUtc,
-                                   LastWriteTime = fileInfo.LastWriteTime,
-                                   LastWriteTimeUtc = fileInfo.LastWriteTimeUtc,
-                                   FileLength = fileInfo.Length,
-                                   Name = fileInfo.Name,
-                               };
+						Console.Write($"\r{DateTime.Now} | {totalProgress} of {resultSize} ({totalProgressPercentage}%) | {result.File.Length} ({fileSizePercentage}%)\t{result.File.Name}");
+					}
+				}
+				else
+					Console.WriteLine($"No {fileType.Key} files were found in {directoryPath}");
+			}
+		}
 
-            using (FileStream fs = File.Open(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (BinaryReader br = new BinaryReader(fs))
-            {
-                result.FileCode = NumericsHelper.ReverseInt(br.ReadInt32());
+		public static void ProcessFile(FileInfo file, ImportFileType fileType, string extension)
+		{
+			Console.WriteLine($"\r{DateTime.Now}\tParsing {fileType} data from {file.Name}");
 
-                for (int i = 0; i < 5; i++)
-                    br.ReadInt32(); // Skip 5 empty Integer (4-byte) slots
+			if (!file.Exists || !(file.Length > 0))
+				throw new FileNotFoundException($"The {fileType} file you specified either does not exist or was an empty file. Please ensure the file exists and that it contains data.", file.FullName);
 
-                result.ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()); // Big Endian, Reverse for actual value
-                result.FileVersion = br.ReadInt32();
-                result.ShapeTypeId = br.ReadInt32();
-                result.XMin = br.ReadDouble();
-                result.YMin = br.ReadDouble();
-                result.XMax = br.ReadDouble();
-                result.YMax = br.ReadDouble();
-                result.ZMin = br.ReadDouble();
-                result.ZMax = br.ReadDouble();
-                result.MMin = br.ReadDouble();
-                result.MMax = br.ReadDouble();
+			if (!file.Name.ToLowerInvariant().EndsWith(extension.ToLowerInvariant()))
+				throw new FileLoadException($"The file you specified does not have a corresponding extension that matches. This application requires that the extensions match the GIS Standards for {fileType} files.", file.FullName);
 
-                int counter = 0;
-                while (br.PeekChar() > -1)
-                {
-                    counter++;
-                    result.ShapeIndexes.Add(new ShapeIndex
-                    {
-                        //IndexFileId = result.Id,
-                        RecordNumber = counter,
-                        Offset = NumericsHelper.ReverseInt(br.ReadInt32()),
-                        ContentLength = NumericsHelper.ReverseInt(br.ReadInt32())
-                    });
-                }
-            }
+			switch (fileType)
+			{
+				case ImportFileType.Index:
+					IndexFiles.Add(new IndexFile(file));
+					break;
+				case ImportFileType.Shape:
+					ShapeFiles.Add(new ShapeFile(file));
+					break;
+				case ImportFileType.Attribute:
+					AttributeFiles.Add(new AttributeFile(file));
+					break;
+				case ImportFileType.FGDCMetadata:
+					FGDCMetadataFiles.Add(new FGDCMetadataFile(file));
+					break;
+				case ImportFileType.ISOMetadata:
+					ISOMetadataFiles.Add(new ISOMetadataFile(file));
+					break;
+				case ImportFileType.ISOEAMetadata:
+					ISOEAMetadataFiles.Add(new ISOEAMetadataFile(file));
+					break;
+				case ImportFileType.Projection:
+					ProjectionFiles.Add(new ProjectionFile(file));
+					break;
+				default:
+					throw new Exception($"An unknown import file type was detected ({fileType}). Unable to proceed!");
+			}
 
-            using (ShapefileEntities db = new ShapefileEntities())
-            {
-                db.Entry(result).State = EntityState.Added;
-                result = db.IndexFiles.Add(result);
-                Console.WriteLine("--==|| {0} record(s) from Index file (ID: {1}) loaded ||==--", db.SaveChanges(), result.Id);
-            }
-        }
+			Console.WriteLine($"\r{DateTime.Now}\t{file.Name} has finished parsing. Beginning Import");
+			// TODO: IMPORT DATA!!!
+		}
 
-        private static void ImportShapeFile(string filePath)
-        {
-            Console.WriteLine("Parsing {0}", filePath);
-            FileInfo fileInfo = new FileInfo(filePath);
+		public static void ProcessXMLSchemas(DirectoryInfo directory)
+		{
+			XMLHelper.GetSchemas(directory);
+		}
 
-            if (!fileInfo.Exists ||
-                fileInfo.Extension != ShapeFormatExtension)
-                throw new ArgumentException("The file you specified either does not exist or is not the appropriate shapefile extenision (*.shp).");
+		private static void ImportData()
+		{
+			if (IndexFiles.Any())
+			{
 
-            // TODO: Delete all records that pertain to this file
+			}
 
-            using (FileStream fs = File.Open(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (BinaryReader br = new BinaryReader(fs))
-            {
-                ShapeFile result = new ShapeFile
-                {
-                    CreationTime = fileInfo.CreationTime,
-                    CreationTimeUtc = fileInfo.CreationTimeUtc,
-                    DirectoryName = fileInfo.DirectoryName,
-                    Extension = fileInfo.Extension,
-                    FullName = fileInfo.FullName,
-                    IsReadOnly = fileInfo.IsReadOnly,
-                    LastAccessTime = fileInfo.LastAccessTime,
-                    LastAccessTimeUtc = fileInfo.LastAccessTimeUtc,
-                    LastWriteTime = fileInfo.LastWriteTime,
-                    LastWriteTimeUtc = fileInfo.LastWriteTimeUtc,
-                    FileLength = fileInfo.Length,
-                    Name = fileInfo.Name,
-                    FileCode = NumericsHelper.ReverseInt(br.ReadInt32())
-                };
+			if (ShapeFiles.Any())
+			{
 
-                for (int i = 0; i < 5; i++)
-                    br.ReadInt32(); // Skip 5 empty Integer (4-byte) slots
+			}
 
-                result.ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()); // Big Endian, Reverse for actual value
-                result.FileVersion = br.ReadInt32();
-                result.ShapeTypeId = br.ReadInt32();
-                result.XMin = br.ReadDouble();
-                result.YMin = br.ReadDouble();
-                result.XMax = br.ReadDouble();
-                result.YMax = br.ReadDouble();
-                result.ZMin = br.ReadDouble();
-                result.ZMax = br.ReadDouble();
-                result.MMin = br.ReadDouble();
-                result.MMax = br.ReadDouble();
+			if (AttributeFiles.Any())
+			{
 
-                using (ShapefileEntities db = new ShapefileEntities())
-                {
-                    db.Entry(result).State = EntityState.Added;
-                    result = db.ShapeFiles.Add(result);
-                    Console.WriteLine("Inserted {0} Shape File Records for Shape File ID: {1})!", db.SaveChanges(), result.Id);
-                }
+			}
 
-                while (br.PeekChar() > -1)
-                    ImportShape(result.Id, (ShapeTypeEnum)result.ShapeTypeId, br);
-            }
-        }
+			if (FGDCMetadataFiles.Any())
+			{
 
-        private static void ImportShape(long shapeFileId, ShapeTypeEnum shapeType, BinaryReader br)
-        {
-            Shape newShape = new Shape
-            {
-                ShapeFileId = shapeFileId,
-                RecordNumber = NumericsHelper.ReverseInt(br.ReadInt32()), // Big, Reverse for actual value
-                ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()), // Big, Reverse for actual value
-                ShapeTypeId = br.ReadInt32()
-            };
+			}
 
-            if (shapeType == ShapeTypeEnum.Null || (ShapeTypeEnum)newShape.ShapeTypeId == ShapeTypeEnum.Null)
-                using (ShapefileEntities db = new ShapefileEntities())
-                {
-                    db.Configuration.AutoDetectChangesEnabled = false;
-                    db.Configuration.ValidateOnSaveEnabled = false;
-                    db.Entry(newShape).State = EntityState.Added;
-                    newShape = db.Shapes.Add(newShape);
-                    Console.WriteLine("Inserted {0} records for the {1} shape! (ID: {2})", db.SaveChanges(), (ShapeTypeEnum)newShape.ShapeTypeId, newShape.Id);
-                    return;
-                }
+			if (ISOMetadataFiles.Any())
+			{
 
-            if (shapeType != (ShapeTypeEnum)newShape.ShapeTypeId) // Shape Type doesn't match type specified in file header. According to specs, this is invalid. Throw exception
-                throw new Exception(string.Format("Unable to process shape! File shape of {0} does not match record shape of {1} which violates ESRI specifications for shape files!", shapeType, (ShapeTypeEnum)newShape.ShapeTypeId));
+			}
 
-            ShapeClass shapeClass = ShapeClass.Coordinate;
-            bool hasMultiplePoints = true;
-            bool hasParts = true;
-            bool hasPartTypes = false;
+			if (ISOEAMetadataFiles.Any())
+			{
 
-            switch (shapeType)
-            {
-                case ShapeTypeEnum.MultiPatch:
-                    shapeClass = ShapeClass.Depth;
-                    hasPartTypes = true;
-                    break;
-                case ShapeTypeEnum.MultiPoint:
-                    hasParts = false;
-                    break;
-                case ShapeTypeEnum.MultiPointM:
-                    shapeClass = ShapeClass.Measurement;
-                    hasParts = false;
-                    break;
-                case ShapeTypeEnum.MultiPointZ:
-                    shapeClass = ShapeClass.Depth;
-                    hasParts = false;
-                    break;
-                case ShapeTypeEnum.Null:
-                    throw new Exception("The application should have never gotten to this point.\r\nSomething is wrong with the code!\r\nLYNCH THE DEVELOPER!");
-                case ShapeTypeEnum.Point:
-                    hasMultiplePoints = false;
-                    hasParts = false;
-                    break;
-                case ShapeTypeEnum.PointM:
-                    shapeClass = ShapeClass.Measurement;
-                    hasMultiplePoints = false;
-                    hasParts = false;
-                    break;
-                case ShapeTypeEnum.PointZ:
-                    shapeClass = ShapeClass.Depth;
-                    hasMultiplePoints = false;
-                    hasParts = false;
-                    break;
-                case ShapeTypeEnum.Polygon:
-                    break;
-                case ShapeTypeEnum.PolygonM:
-                    shapeClass = ShapeClass.Measurement;
-                    break;
-                case ShapeTypeEnum.PolygonZ:
-                    shapeClass = ShapeClass.Depth;
-                    break;
-                case ShapeTypeEnum.PolylineM:
-                    shapeClass = ShapeClass.Measurement;
-                    break;
-                case ShapeTypeEnum.PolylineZ:
-                    shapeClass = ShapeClass.Depth;
-                    break;
-                default:
-                    throw new Exception(string.Format("Unable to process shape! Record Shape of {0} is unknown!", (ShapeTypeEnum)newShape.ShapeTypeId));
-            }
+			}
 
-            if (hasMultiplePoints)
-            {
-                newShape.XMin = br.ReadDouble();
-                newShape.YMin = br.ReadDouble();
-                newShape.XMax = br.ReadDouble();
-                newShape.YMax = br.ReadDouble();
-            }
+			if (ProjectionFiles.Any())
+			{
 
-            newShape.NumberOfParts = hasParts ? br.ReadInt32() : 1;
-            newShape.NumberOfPoints = hasMultiplePoints ? br.ReadInt32() : 1;
+			}
 
-            for (int i = 0; i < newShape.NumberOfParts; i++) // Grab the parts
-            {
-                newShape.Parts.Add(new Part
-                {
-                    SortIndex = i,
-                    PartTypeId = -1,
-                    StartIndex = hasParts ? br.ReadInt32() : 0 // Get the start index
-                });
+		}
 
-                if (i > 0) // If this isn't the first element
-                    newShape.Parts[i - 1].EndIndex = newShape.Parts[i].StartIndex - 1; // Set the last element to this element's start index minus one
+		#region Extensions
 
-                if (i + 1 == newShape.NumberOfParts) // If this is the last element
-                    newShape.Parts[i].EndIndex = newShape.NumberOfPoints - 1; // Set the ending index to the number of points minus one (to account for 0 based index)
-            }
+		public const string AttributeFormatExtension = "dbf";
+		public const string ProjectionFormatExtension = "prj";
+		public const string ShapeFormatExtension = "shp";
+		public const string ISO191EAExtension = "shp.ea.iso.xml";
+		public const string ISO191Extension = "shp.iso.xml";
+		public const string FGDCMetadataExtension = "shp.xml";
+		public const string ShapeIndexFormatExtension = "shx";
 
-            for (int i = 0; i < newShape.NumberOfParts; i++) // Set the number of points. This is done after initial grab to account for first/last elements
-            {
-                if (hasParts && hasPartTypes)
-                    newShape.Parts[i].PartTypeId = br.ReadInt32();
+		public const string GeocodingIndexExtension = "ixs";
+		public const string ODBGeocodingIndexExtension = "mxs";
+		public const string DbfAttributeIndexExtension = "atx";
+		public const string CodePageExtension = "cpg";
 
-                newShape.Parts[i].NumberOfPoints = (newShape.Parts[i].EndIndex - newShape.Parts[i].StartIndex) + 1;
-            }
+		public static readonly string[] SpatialIndexExtension =
+		{
+			"sbn",
+			"sbx"
+		};
 
-            for (int i = 0; i < newShape.NumberOfParts; i++) // For each part
-                for (int j = 0; j < newShape.Parts[i].NumberOfPoints; j++) // For each point in each part
-                {
-                    newShape.Parts[i].Points.Add(new Point
-                    {
-                        SortIndex = j,
-                        X = br.ReadDouble(),
-                        Y = br.ReadDouble(),
-                    }); // Grab the point
-                }
+		public static readonly string[] SpatialIndexReadOnlyExtension =
+		{
+			"fbn",
+			"fbx"
+		};
 
-            if (shapeClass == ShapeClass.Depth)
-            {
-                if (hasMultiplePoints)
-                {
-                    newShape.ZMin = br.ReadDouble();
-                    newShape.ZMax = br.ReadDouble();
-                }
+		public static readonly string[] AttributeIndexExtension =
+		{
+			"ain",
+			"aih"
+		};
 
-                for (int i = 0; i < newShape.NumberOfParts; i++)
-                    for (int j = 0; j < newShape.Parts[i].NumberOfPoints; j++)
-                        newShape.Parts[i].Points[j].Z = br.ReadDouble();
-            }
-
-            if (shapeClass == ShapeClass.Depth ||
-                shapeClass == ShapeClass.Measurement)
-            {
-                if (hasMultiplePoints)
-                {
-                    newShape.MMin = br.ReadDouble();
-                    newShape.MMax = br.ReadDouble();
-                }
-
-                for (int i = 0; i < newShape.NumberOfParts; i++)
-                    for (int j = 0; j < newShape.Parts[i].NumberOfPoints; j++)
-                        newShape.Parts[i].Points[j].M = br.ReadDouble();
-            }
-            
-            using (ShapefileEntities db = new ShapefileEntities())
-            {
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ValidateOnSaveEnabled = false;
-                db.Entry(newShape).State = EntityState.Added;
-                newShape = db.Shapes.Add(newShape);
-                Console.WriteLine("Inserted {0} records for the {1} shape! (ID: {2})", db.SaveChanges(), (ShapeTypeEnum)newShape.ShapeTypeId, newShape.Id);
-            }
-        }
-    }
+		#endregion Extensions
+	}
 }

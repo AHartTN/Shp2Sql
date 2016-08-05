@@ -1,52 +1,63 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
+using System.Data.OleDb;
+using System.Diagnostics;
+using System.IO;
+using Shp2Sql.Classes.Helpers;
+
 namespace Shp2Sql.Models.Binding
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
+	[Table("AttributeFile")]
+	public class AttributeFile : ImportFile
+	{
+		public AttributeFile() : base()
+		{
+			ShapeAttributes = new HashSet<ShapeAttribute>();
+		}
+		public AttributeFile(FileInfo file) : base(file)
+		{
+			ShapeAttributes = new HashSet<ShapeAttribute>();
+			ReadFromFile(file);
+		}
 
-    [Table("AttributeFile")]
-    public partial class AttributeFile
-    {
-        public AttributeFile()
-        {
-            ShapeAttributes = new List<ShapeAttribute>();
-        }
+		public void ReadFromFile(FileInfo file)
+		{
+			FileInfo workingFile = CreateWorkingFile(file);
 
-        public long Id { get; set; }
+			DataSet rawResults = new DataSet();
+			
+			using (OleDbConnection conn = new OleDbConnection(DataHelper.GetDbfConnectionString(workingFile.DirectoryName)))
+			using (OleDbCommand cmd = conn.CreateCommand())
+			{
+				cmd.CommandType = CommandType.Text;
+				cmd.CommandText = DataHelper.GetDbfSelectString(workingFile);
+				cmd.CommandTimeout = 600;
 
-        public DateTime CreationTime { get; set; }
 
-        public DateTime CreationTimeUtc { get; set; }
+				cmd.Connection.Open();
 
-        [Required]
-        [StringLength(1024)]
-        public string DirectoryName { get; set; }
+				var schema = cmd.Connection.GetSchema();
+				OleDbDataAdapter da = new OleDbDataAdapter(cmd);
+				//da.FillSchema(rawResults, SchemaType.Mapped);
+				da.Fill(rawResults);
+			}
 
-        [Required]
-        [StringLength(8)]
-        public string Extension { get; set; }
+			// TODO: PROCESS THE DATASET INTO USABLE DATA
 
-        [Required]
-        [StringLength(1024)]
-        public string FullName { get; set; }
+			workingFile.Delete();
+		}
 
-        public bool IsReadOnly { get; set; }
+		public static FileInfo CreateWorkingFile(FileInfo file)
+		{
+			string workingFilePath = $"{file.DirectoryName}\\ATTRFILE.dbf";
+			file.CopyTo(workingFilePath, true);
+			FileInfo workingFile = new FileInfo(workingFilePath);
+			return workingFile;
+		}
 
-        public DateTime LastAccessTime { get; set; }
-
-        public DateTime LastAccessTimeUtc { get; set; }
-
-        public DateTime LastWriteTime { get; set; }
-
-        public DateTime LastWriteTimeUtc { get; set; }
-
-        public long FileLength { get; set; }
-
-        [Required]
-        [StringLength(1024)]
-        public string Name { get; set; }
-
-        public List<ShapeAttribute> ShapeAttributes { get; set; }
-    }
+		public ICollection<ShapeAttribute> ShapeAttributes { get; set; }
+	}
 }

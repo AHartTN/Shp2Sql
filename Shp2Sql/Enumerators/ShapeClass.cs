@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="ShapeClass.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,14 +18,15 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
 
 namespace Shp2Sql.Enumerators
 {
-    public enum ShapeClass
-    {
-        Coordinate = 0,
-        Measurement = 1,
-        Depth = 2
-    }
+	public enum ShapeClass
+	{
+		Coordinate = 0,
+		Measurement = 1,
+		Depth = 2
+	}
 }

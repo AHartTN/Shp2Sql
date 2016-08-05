@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="Null.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,40 +18,35 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System;
+using System.IO;
+using Shp2Sql.Enumerators;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System;
-    using System.Data.Entity;
-    using System.IO;
-    using Shp2Sql.Enumerators;
-    #endregion
+	#region Using Directives
 
-    public class Null : BaseShape
-    {
-        public Null()
-        {
-        }
+	
 
-        public Null(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
-        {
-            if (!readHeader)
-                ShapeType = ShapeTypeEnum.Null;
-            if (shp.ShapeType != ShapeType &&
-                ShapeType != ShapeTypeEnum.Null)
-                throw new Exception(string.Format("Unable to process shape! Shape types do not match and isn't null! (Shapefile: {0} | Record: {1}", shp.ShapeType, ShapeType));
-        }
+	#endregion
 
-        public static bool Import(ShapeFile shp, BinaryReader br, bool readHeader = true)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                Null newObj = new Null(shp, br, readHeader);
-                db.Entry(db.Nulls.Add(newObj)).State = EntityState.Added;
-                return db.SaveChanges() > 0;
-            }
-        }
-    }
+	public class Null : BaseShape
+	{
+		public Null()
+		{
+		}
+
+		public Null(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
+		{
+			if (!readHeader)
+				ShapeType = ShapeTypeEnum.Null;
+			if (shp.ShapeType != ShapeType &&
+			    ShapeType != ShapeTypeEnum.Null)
+				throw new Exception(
+					$"Unable to process shape! Shape types do not match and isn't null! (Shapefile: {shp.ShapeType} | Record: {ShapeType}");
+		}
+	}
 }

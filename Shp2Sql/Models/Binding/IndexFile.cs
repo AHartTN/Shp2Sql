@@ -1,78 +1,89 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using Shp2Sql.Classes.Helpers;
+
 namespace Shp2Sql.Models.Binding
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
+	[Table("IndexFile")]
+	public class IndexFile : ImportFile
+	{
+		public IndexFile() : base()
+		{
+			ShapeIndexes = new HashSet<ShapeIndex>();
+		}
+		public IndexFile(FileInfo file) : base(file)
+		{
+			ShapeIndexes = new HashSet<ShapeIndex>();
+			ReadFromFile(file);
+		}
 
-    [Table("IndexFile")]
-    public partial class IndexFile
-    {
-        public IndexFile()
-        {
-            ShapeIndexes = new List<ShapeIndex>();
-        }
+		public void ReadFromFile(FileInfo file)
+		{
+			using (var br = new BinaryReader(file.OpenRead()))
+			{
+				var streamLength = br.BaseStream.Length;
+				Console.Write(StringHelper.GetProgressString(br.BaseStream.Position, streamLength, file.Name));
 
-        public long Id { get; set; }
+				FileCode = NumericsHelper.ReverseInt(br.ReadInt32());
 
-        public long ShapeTypeId { get; set; }
+				Console.Write(StringHelper.GetProgressString(br.BaseStream.Position, streamLength, file.Name));
 
-        public DateTime CreationTime { get; set; }
+				for (var i = 0; i < 5; i++)
+					br.ReadInt32(); // Skip 5 empty Integer (4-byte) slots
 
-        public DateTime CreationTimeUtc { get; set; }
+				Console.Write(StringHelper.GetProgressString(br.BaseStream.Position, streamLength, file.Name));
 
-        [Required]
-        [StringLength(1024)]
-        public string DirectoryName { get; set; }
+				ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()); // Big Endian, Reverse for actual value
+				FileVersion = br.ReadInt32();
+				ShapeTypeId = br.ReadInt32();
+				XMin = br.ReadDouble();
+				YMin = br.ReadDouble();
+				XMax = br.ReadDouble();
+				YMax = br.ReadDouble();
+				ZMin = br.ReadDouble();
+				ZMax = br.ReadDouble();
+				MMin = br.ReadDouble();
+				MMax = br.ReadDouble();
 
-        [Required]
-        [StringLength(8)]
-        public string Extension { get; set; }
+				Console.Write(StringHelper.GetProgressString(br.BaseStream.Position, streamLength, file.Name));
 
-        [Required]
-        [StringLength(1024)]
-        public string FullName { get; set; }
+				var counter = 0;
+				while (br.PeekChar() > -1)
+				{
+					ShapeIndexes.Add(new ShapeIndex
+					{
+						//IndexFileId = Id,
+						RecordNumber = ++counter,
+						Offset = NumericsHelper.ReverseInt(br.ReadInt32()),
+						ContentLength = NumericsHelper.ReverseInt(br.ReadInt32())
+					});
 
-        public bool IsReadOnly { get; set; }
+					Console.Write(StringHelper.GetProgressString(br.BaseStream.Position, streamLength, file.Name));
+				}
+			}
+			Console.Write(StringHelper.GetProgressString(file.Length, file.Length, file.Name));
+		}
 
-        public DateTime LastAccessTime { get; set; }
+		public double XMin { get; set; }
 
-        public DateTime LastAccessTimeUtc { get; set; }
+		public double YMin { get; set; }
 
-        public DateTime LastWriteTime { get; set; }
+		public double XMax { get; set; }
 
-        public DateTime LastWriteTimeUtc { get; set; }
+		public double YMax { get; set; }
 
-        public long FileLength { get; set; }
+		public double? ZMin { get; set; }
 
-        [Required]
-        [StringLength(1024)]
-        public string Name { get; set; }
+		public double? ZMax { get; set; }
 
-        public int FileCode { get; set; }
+		public double? MMin { get; set; }
 
-        public int ContentLength { get; set; }
+		public double? MMax { get; set; }
 
-        public int FileVersion { get; set; }
+		public ShapeType ShapeType { get; set; }
 
-        public double XMin { get; set; }
-
-        public double YMin { get; set; }
-
-        public double XMax { get; set; }
-
-        public double YMax { get; set; }
-
-        public double? ZMin { get; set; }
-
-        public double? ZMax { get; set; }
-
-        public double? MMin { get; set; }
-
-        public double? MMax { get; set; }
-
-        public ShapeType ShapeType { get; set; }
-
-        public List<ShapeIndex> ShapeIndexes { get; set; }
-    }
+		public ICollection<ShapeIndex> ShapeIndexes { get; set; }
+	}
 }

@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="ZRange.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,41 +18,33 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.IO;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.Data.Entity;
-    using System.IO;
-    #endregion
+	#region Using Directives
 
-    public class ZRange
-    {
-        public ZRange()
-        {
-        }
 
-        public ZRange(BinaryReader br)
-        {
-            Minimum = br.ReadDouble();
-            Maximum = br.ReadDouble();
-        }
 
-        public long Id { get; set; }
-        public double Minimum { get; set; }
-        public double Maximum { get; set; }
+	#endregion
 
-        public static ZRange Import(BinaryReader br)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                ZRange zr = new ZRange(br);
-                db.Entry(db.ZRanges.Add(zr)).State = EntityState.Added;
-                return db.SaveChanges() > 0
-                           ? zr
-                           : null;
-            }
-        }
-    }
+	public class ZRange
+	{
+		public ZRange()
+		{
+		}
+
+		public ZRange(BinaryReader br)
+		{
+			Minimum = br.ReadDouble();
+			Maximum = br.ReadDouble();
+		}
+
+		public long Id { get; set; }
+		public double Minimum { get; set; }
+		public double Maximum { get; set; }
+	}
 }

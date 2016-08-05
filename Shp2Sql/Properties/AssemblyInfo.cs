@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="AssemblyInfo.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,11 +18,14 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
 
 #region Using Directives
+
 using System.Reflection;
 using System.Runtime.InteropServices;
+
 #endregion
 
 // General Information about an assembly is controlled through the following 
@@ -29,11 +33,11 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 
 [assembly: AssemblyTitle("Shp2Sql")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Anthony Hart's Shapefile parser")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("AH Operations")]
 [assembly: AssemblyProduct("Shp2Sql")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright © AH Operations 1985-2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

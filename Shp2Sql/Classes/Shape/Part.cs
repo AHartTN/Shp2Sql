@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="Part.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,34 +18,39 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.Collections.Generic;
+using System.IO;
+using Shp2Sql.Enumerators;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.Collections.Generic;
-    using System.IO;
-    using Shp2Sql.Enumerators;
-    #endregion
+	#region Using Directives
 
-    public class Part
-    {
-        public Part()
-        {
-            Points = new List<Point>();
-        }
+	
 
-        public Part(BinaryReader br)
-        {
-            Points = new List<Point>();
-            StartIndex = br.ReadInt32();
-        }
+	#endregion
 
-        public long Id { get; set; }
-        public int StartIndex { get; set; }
-        public int EndIndex { get; set; }
-        public int NumberOfPoints { get; set; }
-        public SurfacePatchTypeEnum PartType { get; set; }
-        public List<Point> Points { get; set; }
-    }
+	public class Part
+	{
+		public Part()
+		{
+			Points = new HashSet<Point>();
+		}
+
+		public Part(BinaryReader br)
+		{
+			Points = new HashSet<Point>();
+			StartIndex = br.ReadInt32();
+		}
+
+		public long Id { get; set; }
+		public int StartIndex { get; set; }
+		public int EndIndex { get; set; }
+		public int NumberOfPoints { get; set; }
+		public SurfacePatchTypeEnum PartType { get; set; }
+		public ICollection<Point> Points { get; set; }
+	}
 }

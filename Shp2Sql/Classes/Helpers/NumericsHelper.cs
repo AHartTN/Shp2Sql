@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="NumericsHelper.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,26 +18,31 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System;
 
 namespace Shp2Sql.Classes.Helpers
 {
-    #region Using Directives
-    using System;
-    #endregion
+	#region Using Directives
 
-    /// <summary>A class designed for aiding with common funtions regarding numerical values.</summary>
-    public class NumericsHelper
-    {
-        /// <summary>Convert an integer's byte order</summary>
-        /// <param name="source">The integer to reverse</param>
-        /// <returns>The reversed integer (Small if source was big and visa-versa)</returns>
-        public static int ReverseInt(int source)
-        {
-            byte[] fileCodeBytes = BitConverter.GetBytes(source);
-            Array.Reverse(fileCodeBytes);
-            string fileCodeByteString = fileCodeBytes.ToString();
-            return BitConverter.ToInt32(fileCodeBytes, 0);
-        }
-    }
+	
+
+	#endregion
+
+	/// <summary>A class designed for aiding with common funtions regarding numerical values.</summary>
+	public class NumericsHelper
+	{
+		/// <summary>Convert an integer's byte order</summary>
+		/// <param name="source">The integer to reverse</param>
+		/// <returns>The reversed integer (Small if source was big and visa-versa)</returns>
+		public static int ReverseInt(int source)
+		{
+			var fileCodeBytes = BitConverter.GetBytes(source);
+			Array.Reverse(fileCodeBytes);
+			//string fileCodeByteString = fileCodeBytes.ToString();
+			return BitConverter.ToInt32(fileCodeBytes, 0);
+		}
+	}
 }

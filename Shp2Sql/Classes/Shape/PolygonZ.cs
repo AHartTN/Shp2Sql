@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="PolygonZ.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,57 +18,52 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Shp2Sql.Enumerators;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System;
-    using System.Data.Entity;
-    using System.IO;
-    using Shp2Sql.Enumerators;
-    #endregion
+	#region Using Directives
 
-    public class PolygonZ : Polygon
-    {
-        public PolygonZ()
-        {
-        }
+	
 
-        public PolygonZ(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
-        {
-            if (!readHeader)
-                ShapeType = ShapeTypeEnum.PolygonZ;
-            if (shp.ShapeType != ShapeType)
-                throw new Exception(string.Format("Unable to process shape! Shape types do not match! (Shapefile: {0} | Record: {1}", shp.ShapeType, ShapeType));
-            ZRange = ZRange.Import(br);
-            ZRangeId = ZRange.Id;
-            for (int i = 0; i < NumberOfParts; i++)
-            {
-                for (int j = 0; j < Parts[i].NumberOfPoints; j++)
-                {
-                    Parts[i].Points[j].ShapeType = ShapeTypeEnum.PointZ;
-                    Parts[i].Points[j].Z = br.ReadDouble();
-                }
-            }
-            MeasurementRange = MeasurementRange.Import(br);
-            MeasurementRangeId = MeasurementRange.Id;
-            for (int i = 0; i < NumberOfParts; i++)
-            {
-                for (int j = 0; j < Parts[i].NumberOfPoints; j++)
-                    Parts[i].Points[j].M = br.ReadDouble();
-            }
-        }
+	#endregion
 
-        public new static bool Import(ShapeFile shp, BinaryReader br, bool readHeader = true)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                PolygonZ newObj = new PolygonZ(shp, br, readHeader);
-                db.Polygons.Add(newObj);
-                db.Entry(newObj).State = EntityState.Added;
-                return db.SaveChanges() > 0;
-            }
-        }
-    }
+	public class PolygonZ : Polygon
+	{
+		public PolygonZ()
+		{
+		}
+
+		public PolygonZ(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
+		{
+			if (!readHeader)
+				ShapeType = ShapeTypeEnum.PolygonZ;
+			if (shp.ShapeType != ShapeType)
+				throw new Exception(
+					$"Unable to process shape! Shape types do not match! (Shapefile: {shp.ShapeType} | Record: {ShapeType}");
+			ZRange = new ZRange(br);
+			//ZRangeId = ZRange.Id;
+			for (var i = 0; i < NumberOfParts; i++)
+			{
+				for (var j = 0; j < ((List<Part>)Parts)[i].NumberOfPoints; j++)
+				{
+					((List<Point>)((List<Part>)Parts)[i].Points)[j].ShapeType = ShapeTypeEnum.PointZ;
+					((List<Point>)((List<Part>)Parts)[i].Points)[j].Z = br.ReadDouble();
+				}
+			}
+			MeasurementRange = new MeasurementRange(br);
+			//MeasurementRangeId = MeasurementRange.Id;
+			for (var i = 0; i < NumberOfParts; i++)
+			{
+				for (var j = 0; j < ((List<Part>)Parts)[i].NumberOfPoints; j++)
+					((List<Point>)((List<Part>)Parts)[i].Points)[j].M = br.ReadDouble();
+			}
+		}
+	}
 }

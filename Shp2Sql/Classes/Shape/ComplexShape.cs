@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="ComplexShape.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,31 +18,36 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.IO;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.IO;
-    #endregion
+	#region Using Directives
 
-    public class ComplexShape : BaseShape
-    {
-        public ComplexShape()
-        {
-        }
+	
 
-        public ComplexShape(ShapeFile shp, BinaryReader br, bool readHeader) : base(shp, br, readHeader)
-        {
-        }
+	#endregion
 
-        public double XMin { get; set; }
-        public double YMin { get; set; }
-        public double XMax { get; set; }
-        public double YMax { get; set; }
-        public double? ZMin { get; set; }
-        public double? ZMax { get; set; }
-        public double? MMin { get; set; }
-        public double? MMax { get; set; }
-    }
+	public class ComplexShape : BaseShape
+	{
+		public ComplexShape()
+		{
+		}
+
+		public ComplexShape(ShapeFile shp, BinaryReader br, bool readHeader) : base(shp, br, readHeader)
+		{
+		}
+
+		public double XMin { get; set; }
+		public double YMin { get; set; }
+		public double XMax { get; set; }
+		public double YMax { get; set; }
+		public double? ZMin { get; set; }
+		public double? ZMax { get; set; }
+		public double? MMin { get; set; }
+		public double? MMax { get; set; }
+	}
 }

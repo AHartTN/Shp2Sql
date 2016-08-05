@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="SurfacePatchTypeEnum.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,17 +18,18 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
 
 namespace Shp2Sql.Enumerators
 {
-    public enum SurfacePatchTypeEnum
-    {
-        TriangleStrip = 0,
-        TriangleFan = 1,
-        OuterRing = 2,
-        InnerRing = 3,
-        FirstRing = 4,
-        Ring = 5
-    }
+	public enum SurfacePatchTypeEnum
+	{
+		TriangleStrip = 0,
+		TriangleFan = 1,
+		OuterRing = 2,
+		InnerRing = 3,
+		FirstRing = 4,
+		Ring = 5
+	}
 }

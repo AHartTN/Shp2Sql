@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="PolygonM.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,50 +18,45 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Shp2Sql.Enumerators;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System;
-    using System.Data.Entity;
-    using System.IO;
-    using Shp2Sql.Enumerators;
-    #endregion
+	#region Using Directives
 
-    public class PolygonM : Polygon
-    {
-        public PolygonM()
-        {
-        }
+	
 
-        public PolygonM(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
-        {
-            if (!readHeader)
-                ShapeType = ShapeTypeEnum.PolygonM;
-            if (shp.ShapeType != ShapeType)
-                throw new Exception(string.Format("Unable to process shape! Shape types do not match! (Shapefile: {0} | Record: {1}", shp.ShapeType, ShapeType));
-            MeasurementRange = MeasurementRange.Import(br);
-            MeasurementRangeId = MeasurementRange.Id;
-            for (int i = 0; i < NumberOfParts; i++)
-            {
-                for (int j = 0; j < Parts[i].NumberOfPoints; j++)
-                {
-                    Parts[i].Points[j].ShapeType = ShapeTypeEnum.PointM;
-                    Parts[i].Points[j].M = br.ReadDouble();
-                }
-            }
-        }
+	#endregion
 
-        public new static bool Import(ShapeFile shp, BinaryReader br, bool readHeader = true)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                PolygonM newObj = new PolygonM(shp, br, readHeader);
-                db.Polygons.Add(newObj);
-                db.Entry(newObj).State = EntityState.Added;
-                return db.SaveChanges() > 0;
-            }
-        }
-    }
+	public class PolygonM : Polygon
+	{
+		public PolygonM()
+		{
+		}
+
+		public PolygonM(ShapeFile shp, BinaryReader br, bool readHeader = true) : base(shp, br, readHeader)
+		{
+			if (!readHeader)
+				ShapeType = ShapeTypeEnum.PolygonM;
+			if (shp.ShapeType != ShapeType)
+				throw new Exception(
+					$"Unable to process shape! Shape types do not match! (Shapefile: {shp.ShapeType} | Record: {ShapeType}");
+			MeasurementRange = new MeasurementRange(br);
+			//MeasurementRangeId = MeasurementRange.Id;
+			for (var i = 0; i < NumberOfParts; i++)
+			{
+				for (var j = 0; j < ((List<Part>)Parts)[i].NumberOfPoints; j++)
+				{
+					((List<Point>)((List<Part>)Parts)[i].Points)[j].ShapeType = ShapeTypeEnum.PointM;
+					((List<Point>)((List<Part>)Parts)[i].Points)[j].M = br.ReadDouble();
+				}
+			}
+		}
+	}
 }

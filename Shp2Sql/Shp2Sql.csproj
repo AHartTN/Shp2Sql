@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Shp2Sql</RootNamespace>
     <AssemblyName>Shp2Sql</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +33,29 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Shp2Sql.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework">
       <HintPath>..\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.dll</HintPath>
@@ -42,6 +66,7 @@
     <Reference Include="Microsoft.SqlServer.Types, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Linq" />
     <Reference Include="System.Runtime.Serialization" />
@@ -55,41 +80,27 @@
   <ItemGroup>
     <Compile Include="Classes\Comparers\FileNameComparer.cs" />
     <Compile Include="Classes\Helpers\DataHelper.cs" />
+    <Compile Include="Classes\Helpers\EXEHelper.cs" />
+    <Compile Include="Classes\Helpers\MathHelper.cs" />
     <Compile Include="Classes\Helpers\NumericsHelper.cs" />
-    <Compile Include="Classes\Index\IndexFile.cs" />
-    <Compile Include="Classes\Index\IndexRecord.cs" />
-    <Compile Include="Classes\Shape\BaseShape.cs" />
-    <Compile Include="Classes\Shape\BoundingBox.cs" />
-    <Compile Include="Classes\Shape\BoundingBoxM.cs" />
-    <Compile Include="Classes\Shape\BoundingBoxZ.cs" />
-    <Compile Include="Classes\Shape\ComplexShape.cs" />
-    <Compile Include="Classes\Shape\MeasurementRange.cs" />
-    <Compile Include="Classes\Shape\MultiPatch.cs" />
-    <Compile Include="Classes\Shape\MultiPoint.cs" />
-    <Compile Include="Classes\Shape\MultiPointM.cs" />
-    <Compile Include="Classes\Shape\MultiPointZ.cs" />
-    <Compile Include="Classes\Shape\Null.cs" />
-    <Compile Include="Classes\Shape\Part.cs" />
-    <Compile Include="Classes\Shape\Point.cs" />
-    <Compile Include="Classes\Shape\PointM.cs" />
-    <Compile Include="Classes\Shape\PointZ.cs" />
-    <Compile Include="Classes\Shape\Polygon.cs" />
-    <Compile Include="Classes\Shape\PolygonM.cs" />
-    <Compile Include="Classes\Shape\PolygonZ.cs" />
-    <Compile Include="Classes\Shape\Polyline.cs" />
-    <Compile Include="Classes\Shape\PolylineM.cs" />
-    <Compile Include="Classes\Shape\PolylineZ.cs" />
-    <Compile Include="Classes\Shape\RecordHeader.cs" />
-    <Compile Include="Classes\Shape\Shapefile.cs" />
-    <Compile Include="Classes\Shape\ZRange.cs" />
+    <Compile Include="Classes\Helpers\StringHelper.cs" />
+    <Compile Include="Classes\Helpers\XMLHelper.cs" />
+    <Compile Include="Enumerators\ImportFileType.cs" />
     <Compile Include="Enumerators\ShapeClass.cs" />
     <Compile Include="Enumerators\SurfacePatchTypeEnum.cs" />
     <Compile Include="ESRIHelper.cs" />
     <Compile Include="Models\Binding\AttributeFile.cs" />
+    <Compile Include="Models\Binding\BaseFile.cs" />
+    <Compile Include="Models\Binding\BaseModel.cs" />
+    <Compile Include="Models\Binding\ImportFile.cs" />
     <Compile Include="Models\Binding\IndexFile.cs" />
+    <Compile Include="Models\Binding\ISOEAMetadataFile.cs" />
+    <Compile Include="Models\Binding\ISOMetadataFile.cs" />
+    <Compile Include="Models\Binding\FGDCMetadataFile.cs" />
     <Compile Include="Models\Binding\Part.cs" />
     <Compile Include="Models\Binding\PartType.cs" />
     <Compile Include="Models\Binding\Point.cs" />
+    <Compile Include="Models\Binding\ProjectionFile.cs" />
     <Compile Include="Models\Binding\Shape.cs" />
     <Compile Include="Models\Binding\ShapeAttribute.cs" />
     <Compile Include="Models\Binding\ShapeFile.cs" />
@@ -117,7 +128,9 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Classes\Shape\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

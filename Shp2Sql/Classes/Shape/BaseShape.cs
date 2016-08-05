@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="BaseShape.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,45 +18,52 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using Shp2Sql.Enumerators;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.IO;
-    using Shp2Sql.Enumerators;
-    #endregion
+	#region Using Directives
 
-    public class BaseShape
-    {
-        public BaseShape()
-        {
-        }
+	
 
-        public BaseShape(ShapeFile shp, BinaryReader br, bool readHeader = true)
-        {
-            ShapeFile = shp;
-            ShapeFileId = shp.Id;
-            RecordHeader = readHeader
-                               ? RecordHeader.Import(br)
-                               : null;
-            if (RecordHeader != null)
-            {
-                RecordHeaderId = RecordHeader.Id;
-                ShapeType = (ShapeTypeEnum)br.ReadInt32();
-            }
-        }
+	#endregion
 
-        public long Id { get; set; }
-        public long ShapeFileId { get; set; }
-        public long? RecordHeaderId { get; set; }
-        public ShapeTypeEnum ShapeType { get; set; }
+	public class BaseShape
+	{
+		public BaseShape()
+		{
+		}
 
-        [ForeignKey("ShapeFileId")]
-        public ShapeFile ShapeFile { get; set; }
+		public BaseShape(ShapeFile shp, BinaryReader br, bool readHeader = true)
+		{
+			ShapeFile = shp;
+			//ShapeFileId = shp.Id;
 
-        [ForeignKey("RecordHeaderId")]
-        public RecordHeader RecordHeader { get; set; }
-    }
+			RecordHeader = readHeader
+				? new RecordHeader(br)
+				: null;
+
+			if (RecordHeader != null)
+			{
+				RecordHeaderId = RecordHeader.Id;
+				ShapeType = (ShapeTypeEnum) br.ReadInt32();
+			}
+		}
+
+		public long Id { get; set; }
+		public long ShapeFileId { get; set; }
+		public long? RecordHeaderId { get; set; }
+		public ShapeTypeEnum ShapeType { get; set; }
+
+		[ForeignKey("ShapeFileId")]
+		public ShapeFile ShapeFile { get; set; }
+
+		[ForeignKey("RecordHeaderId")]
+		public RecordHeader RecordHeader { get; set; }
+	}
 }

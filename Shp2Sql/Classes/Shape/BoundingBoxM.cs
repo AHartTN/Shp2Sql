@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="BoundingBoxM.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,38 +18,29 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.IO;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.Data.Entity;
-    using System.IO;
-    #endregion
+	#region Using Directives
 
-    public class BoundingBoxM : BoundingBox
-    {
-        public BoundingBoxM()
-        {
-        }
+	
 
-        public BoundingBoxM(BinaryReader br) : base(br)
-        {
-            MMin = br.ReadDouble();
-            MMax = br.ReadDouble();
-        }
+	#endregion
 
-        public new static BoundingBoxM Import(BinaryReader br)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                BoundingBoxM newObj = new BoundingBoxM(br);
-                newObj = (BoundingBoxM)db.BoundingBoxes.Add(newObj);
-                db.Entry(newObj).State = EntityState.Added;
-                return db.SaveChanges() > 0
-                           ? newObj
-                           : null;
-            }
-        }
-    }
+	public class BoundingBoxM : BoundingBox
+	{
+		public BoundingBoxM()
+		{
+		}
+
+		public BoundingBoxM(BinaryReader br) : base(br)
+		{
+			MMin = br.ReadDouble();
+			MMax = br.ReadDouble();
+		}
+	}
 }

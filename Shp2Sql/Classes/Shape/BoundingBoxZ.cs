@@ -1,4 +1,5 @@
 ﻿#region Copyright Header
+
 // <copyright file="BoundingBoxZ.cs" company="AH Operations">
 // 	Copyright (c) 1985 - 2014 AH Operations All Rights Reserved
 // 
@@ -17,40 +18,31 @@
 // 
 // 	Purpose: WRITE A DESCRIPTION FOR THIS FILE!
 // </summary>
+
 #endregion
+
+using System.IO;
 
 namespace Shp2Sql.Classes.Shape
 {
-    #region Using Directives
-    using System.Data.Entity;
-    using System.IO;
-    #endregion
+	#region Using Directives
 
-    public class BoundingBoxZ : BoundingBox
-    {
-        public BoundingBoxZ()
-        {
-        }
+	
 
-        public BoundingBoxZ(BinaryReader br) : base(br)
-        {
-            ZMin = br.ReadDouble();
-            ZMax = br.ReadDouble();
-            MMin = br.ReadDouble();
-            MMax = br.ReadDouble();
-        }
+	#endregion
 
-        public new static BoundingBoxZ Import(BinaryReader br)
-        {
-            using (ShapeEntities db = new ShapeEntities())
-            {
-                BoundingBoxZ newObj = new BoundingBoxZ(br);
-                db.BoundingBoxes.Add(newObj);
-                db.Entry(newObj).State = EntityState.Added;
-                return db.SaveChanges() > 0
-                           ? newObj
-                           : null;
-            }
-        }
-    }
+	public class BoundingBoxZ : BoundingBox
+	{
+		public BoundingBoxZ()
+		{
+		}
+
+		public BoundingBoxZ(BinaryReader br) : base(br)
+		{
+			ZMin = br.ReadDouble();
+			ZMax = br.ReadDouble();
+			MMin = br.ReadDouble();
+			MMax = br.ReadDouble();
+		}
+	}
 }

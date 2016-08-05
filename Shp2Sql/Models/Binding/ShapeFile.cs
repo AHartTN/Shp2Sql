@@ -1,83 +1,74 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using Shp2Sql.Classes.Helpers;
+using Shp2Sql.Enumerators;
+
 namespace Shp2Sql.Models.Binding
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data.Entity;
-    using System.IO;
-    using Shp2Sql.Classes.Helpers;
-    using Shp2Sql.Enumerators;
-    using Shp2Sql.Models.Entity;
+	[Table("ShapeFile")]
+	public class ShapeFile : ImportFile
+	{
+		public ShapeFile() : base()
+		{
+			Shapes = new HashSet<Shape>();
+		}
 
-    [Table("ShapeFile")]
-    public partial class ShapeFile
-    {
-        public ShapeFile()
-        {
-            Shapes = new List<Shape>();
-        }
+		public ShapeFile(FileInfo file) : base(file)
+		{
+			Shapes = new HashSet<Shape>();
+			ReadFromFile(file);
+		}
 
-        public long Id { get; set; }
+		public void ReadFromFile(FileInfo file)
+		{
+			// TODO: Delete all records that pertain to this file
 
-        public long ShapeTypeId { get; set; }
+			using (var br = new BinaryReader(file.OpenRead()))
+			{
+				FileCode = NumericsHelper.ReverseInt(br.ReadInt32());
 
-        public DateTime CreationTime { get; set; }
+				for (var i = 0; i < 5; i++)
+					br.ReadInt32(); // Skip 5 empty Integer (4-byte) slots
 
-        public DateTime CreationTimeUtc { get; set; }
+				ContentLength = NumericsHelper.ReverseInt(br.ReadInt32()); // Big Endian, Reverse for actual value
+				FileVersion = br.ReadInt32();
+				ShapeTypeId = br.ReadInt32();
+				XMin = br.ReadDouble();
+				YMin = br.ReadDouble();
+				XMax = br.ReadDouble();
+				YMax = br.ReadDouble();
+				ZMin = br.ReadDouble();
+				ZMax = br.ReadDouble();
+				MMin = br.ReadDouble();
+				MMax = br.ReadDouble();
 
-        [Required]
-        [StringLength(1024)]
-        public string DirectoryName { get; set; }
+				while (br.PeekChar() > -1)
+					Shapes.Add(new Shape((ShapeTypeEnum)ShapeTypeId, br));
+			}
+		}
 
-        [Required]
-        [StringLength(8)]
-        public string Extension { get; set; }
 
-        [Required]
-        [StringLength(1024)]
-        public string FullName { get; set; }
+		public double XMin { get; set; }
 
-        public bool IsReadOnly { get; set; }
+		public double YMin { get; set; }
 
-        public DateTime LastAccessTime { get; set; }
+		public double XMax { get; set; }
 
-        public DateTime LastAccessTimeUtc { get; set; }
+		public double YMax { get; set; }
 
-        public DateTime LastWriteTime { get; set; }
+		public double? ZMin { get; set; }
 
-        public DateTime LastWriteTimeUtc { get; set; }
+		public double? ZMax { get; set; }
 
-        public long FileLength { get; set; }
+		public double? MMin { get; set; }
 
-        [Required]
-        [StringLength(1024)]
-        public string Name { get; set; }
+		public double? MMax { get; set; }
 
-        public int FileCode { get; set; }
+		public ShapeType ShapeType { get; set; }
 
-        public int ContentLength { get; set; }
-
-        public int FileVersion { get; set; }
-
-        public double XMin { get; set; }
-
-        public double YMin { get; set; }
-
-        public double XMax { get; set; }
-
-        public double YMax { get; set; }
-
-        public double? ZMin { get; set; }
-
-        public double? ZMax { get; set; }
-
-        public double? MMin { get; set; }
-
-        public double? MMax { get; set; }
-
-        public ShapeType ShapeType { get; set; }
-
-        public List<Shape> Shapes { get; set; }
-    }
+		public ICollection<Shape> Shapes { get; set; }
+	}
 }
