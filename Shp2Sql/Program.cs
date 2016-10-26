@@ -11,7 +11,7 @@
 	{
 		public static string SourcePath = ConfigurationManager.AppSettings["SourcePath"];
 
-		static readonly ESRIHelper esriHelper = new ESRIHelper();
+		private static readonly ESRIHelper esriHelper = new ESRIHelper();
 
 		public static void Main(string[] args)
 		{
