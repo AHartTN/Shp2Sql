@@ -57,6 +57,38 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Comparers\FileNameComparer.cs" />
+    <Compile Include="Enumerators\ImportFileType.cs" />
+    <Compile Include="Enumerators\ShapeClass.cs" />
+    <Compile Include="Enumerators\ShapeType.cs" />
+    <Compile Include="Enumerators\SurfacePatchTypeEnum.cs" />
+    <Compile Include="Helpers\DataHelper.cs" />
+    <Compile Include="Helpers\ESRIHelper.cs" />
+    <Compile Include="Helpers\EXEHelper.cs" />
+    <Compile Include="Helpers\FileHelper.cs" />
+    <Compile Include="Helpers\LogHelper.cs" />
+    <Compile Include="Helpers\MathHelper.cs" />
+    <Compile Include="Helpers\NumericsHelper.cs" />
+    <Compile Include="Helpers\RandomHelper.cs" />
+    <Compile Include="Helpers\StringHelper.cs" />
+    <Compile Include="Helpers\XMLHelper.cs" />
+    <Compile Include="Models\Base\BaseFile.cs" />
+    <Compile Include="Models\Base\BaseModel.cs" />
+    <Compile Include="Models\Base\RunCommandOptions.cs" />
+    <Compile Include="Models\Binding\AttributeFile.cs" />
+    <Compile Include="Models\Binding\CodePageFile.cs" />
+    <Compile Include="Models\Binding\ImportFile.cs" />
+    <Compile Include="Models\Binding\IndexFile.cs" />
+    <Compile Include="Models\Binding\MetadataFile.cs" />
+    <Compile Include="Models\Binding\Part.cs" />
+    <Compile Include="Models\Binding\PartType.cs" />
+    <Compile Include="Models\Binding\Point.cs" />
+    <Compile Include="Models\Binding\ProjectionFile.cs" />
+    <Compile Include="Models\Binding\Shape.cs" />
+    <Compile Include="Models\Binding\ShapeAttribute.cs" />
+    <Compile Include="Models\Binding\ShapeFile.cs" />
+    <Compile Include="Models\Binding\ShapeIndex.cs" />
+    <Compile Include="Models\Entity\ShapefileEntities.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -80,12 +112,6 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shp2SqlLib\Shp2SqlLib\Shp2SqlLib.csproj">
-      <Project>{5D9A4654-A3C9-4E2C-A2B4-31AB83E5AF19}</Project>
-      <Name>Shp2SqlLib</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
       <Private>True</Private>
@@ -94,6 +120,7 @@
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.SqlServer.Types, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -101,6 +128,12 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Classes\" />
+    <Folder Include="Shape\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

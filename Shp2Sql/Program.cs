@@ -1,10 +1,11 @@
-﻿namespace Shp2Sql
+﻿using Shp2Sql.Helpers;
+
+namespace Shp2Sql
 {
 	#region Imports
 
 	using System;
 	using System.Configuration;
-	using Shp2SqlLib.Helpers;
 
 	#endregion
 	public class Program
